@@ -1,19 +1,26 @@
 FROM php:8.1-apache
 
-# Enable Apache modules (optional but safe)
+# Enable useful Apache modules
 RUN a2enmod rewrite
 
 # Set working directory
 WORKDIR /var/www/html
 
-# Copy all files into Apache's public directory
+# Copy files to Apache's root
 COPY . /var/www/html/
 
-# Change default directory index to your PHP file
+# Make sure the file has the correct permissions
+RUN chmod -R 755 /var/www/html && \
+    chown -R www-data:www-data /var/www/html
+
+# Set DirectoryIndex to your PHP file with escaped parentheses
 RUN echo "DirectoryIndex scoreboard\\ \\(1\\).php" > /etc/apache2/conf-enabled/directoryindex.conf
 
-# Fix permissions (recommended)
-RUN chown -R www-data:www-data /var/www/html
+# Allow access to the root directory
+RUN echo "<Directory /var/www/html>\n\
+    Options Indexes FollowSymLinks\n\
+    AllowOverride All\n\
+    Require all granted\n\
+</Directory>" > /etc/apache2/conf-enabled/permissions.conf
 
-# Expose port 80
 EXPOSE 80
